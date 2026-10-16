@@ -10,6 +10,7 @@
 const STORAGE_KEY_COUPONS = 'kurdish_coupon_app_coupons_v3';
 const STORAGE_KEY_FUELS = 'kurdish_coupon_app_fuels_v3';
 const STORAGE_KEY_PIN = 'kurdish_coupon_app_pin_v3';
+const STORAGE_KEY_UNIT_PRICES = 'kurdish_coupon_app_unit_prices_v1';
 const CYCLE_MS = 3 * 24 * 60 * 60 * 1000; // 72 Hours (3 Days)
 
 // Global State
@@ -18,6 +19,7 @@ let fuelRecords = [];
 let currentEnteredPin = '';
 let activeCouponForModal = null;
 let countdownTimer = null;
+let lastDashboardCodeEntry = '';
 
 // ========================================================
 // INITIALIZATION
@@ -26,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadData();
   setupLiveClock();
   setupEventListeners();
+  setupQuickDashboard();
   checkPinSecurityOnLaunch();
   renderAll();
 
@@ -33,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = setInterval(() => {
     updateCouponsCountdownDisplay();
+    renderCouponCycleCountdown();
   }, 1000);
 });
 
@@ -137,7 +141,7 @@ function setupLiveClock() {
 // ========================================================
 // PAGE NAVIGATION
 // ========================================================
-function switchPage(pageId) {
+function switchPage(pageId, activeTab = pageId) {
   document.querySelectorAll('.app-page').forEach(page => {
     page.classList.remove('active');
   });
@@ -155,7 +159,14 @@ function switchPage(pageId) {
     }
   });
 
+  document.querySelectorAll('.quick-tab').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.tab || btn.dataset.page) === activeTab);
+  });
+
   if (pageId === 'homePage') {
+    populateHomeCouponDropdown();
+    renderHomeSummary();
+  } else if (pageId === 'couponsPage') {
     renderHomeCoupons();
   } else if (pageId === 'fuelPage') {
     populateFuelCouponDropdown();
@@ -311,6 +322,7 @@ function quickRenewCouponFromCard(id) {
   c.activatedAt = new Date().toISOString();
   saveCoupons();
   renderHomeCoupons();
+  renderCouponCycleCountdown();
   showToast(`خولی ٣ ڕۆژەی (${c.name}) نوێکرایەوە! ⏱️`);
 }
 
@@ -481,6 +493,7 @@ function deleteFuelRecord(id) {
   saveFuels();
   renderFullFuelHistory();
   renderDashboardTotals();
+  renderHomeSummary();
   showToast('مامەڵەکە سڕایەوە');
 }
 
@@ -915,6 +928,7 @@ function setupEventListeners() {
       renderFullFuelHistory();
       renderDashboardTotals();
       renderHomeCoupons();
+      renderHomeSummary();
     });
   }
 }
@@ -922,9 +936,273 @@ function setupEventListeners() {
 function renderAll() {
   renderHomeCoupons();
   populateFuelCouponDropdown();
+  populateHomeCouponDropdown();
   renderFullFuelHistory();
   renderDashboardTotals();
+  renderHomeSummary();
   recalculateLiveFuel();
+}
+
+// ========================================================
+// QUICK ACCOUNTING DASHBOARD
+// ========================================================
+function setupQuickDashboard() {
+  const dateInput = document.getElementById('homeTxnDate');
+  if (dateInput && !dateInput.value) dateInput.value = formatLocalDate(new Date());
+
+  const savedPrices = localStorage.getItem(STORAGE_KEY_UNIT_PRICES);
+  if (savedPrices) {
+    try {
+      const prices = JSON.parse(savedPrices);
+      const buy = document.getElementById('homeUnitBuy');
+      const sell = document.getElementById('homeUnitSell');
+      if (buy && prices.buy !== undefined) buy.value = prices.buy;
+      if (sell && prices.sell !== undefined) sell.value = prices.sell;
+    } catch (error) {
+      localStorage.removeItem(STORAGE_KEY_UNIT_PRICES);
+    }
+  }
+
+  ['homeCouponRate', 'homeCouponLiters', 'homeCommercialRate', 'homeCommercialLiters'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateQuickEntryTotals);
+  });
+  updateQuickEntryTotals();
+  populateHomeCouponDropdown();
+  renderHomeSummary();
+}
+
+function formatLocalDate(date) {
+  const pad = value => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function populateHomeCouponDropdown() {
+  const select = document.getElementById('homeCouponSelect');
+  const codeList = document.getElementById('homeCouponCodes');
+  if (!select) return;
+  const selected = select.value;
+  select.innerHTML = '<option value="">بێ کۆپۆن</option>' + coupons.map(coupon =>
+    `<option value="${escapeHtml(coupon.id)}">${escapeHtml(coupon.code || coupon.password || 'کۆپۆن')} — ${escapeHtml(coupon.name)}</option>`
+  ).join('');
+  if (codeList) {
+    codeList.innerHTML = coupons.map(coupon => `<option value="${escapeHtml(coupon.code || coupon.password || '')}">${escapeHtml(coupon.name)}</option>`).join('');
+  }
+  if (coupons.some(coupon => coupon.id === selected)) select.value = selected;
+}
+
+function syncDashboardCouponCode() {
+  const code = document.getElementById('homeCouponCode')?.value.trim().toLowerCase() || '';
+  const select = document.getElementById('homeCouponSelect');
+  const match = coupons.find(coupon =>
+    String(coupon.code || '').toLowerCase() === code || String(coupon.password || '').toLowerCase() === code
+  );
+  if (select) select.value = match?.id || '';
+  if (!match) lastDashboardCodeEntry = '';
+  if (match && lastDashboardCodeEntry !== match.id) {
+    match.activatedAt = new Date().toISOString();
+    saveCoupons();
+    lastDashboardCodeEntry = match.id;
+    showToast(`کۆپۆنی ${match.code || match.name} چالاک کرا؛ کاتژمێری ٣ ڕۆژە دەستی پێکرد ⏱️`);
+  }
+  renderCouponCycleCountdown();
+}
+
+function syncDashboardCouponSelect() {
+  const select = document.getElementById('homeCouponSelect');
+  const coupon = coupons.find(item => item.id === select?.value);
+  const codeInput = document.getElementById('homeCouponCode');
+  if (codeInput) codeInput.value = coupon?.code || '';
+  renderCouponCycleCountdown();
+}
+
+function updateQuickEntryTotals() {
+  const couponRate = Number(document.getElementById('homeCouponRate')?.value) || 0;
+  const couponLiters = Number(document.getElementById('homeCouponLiters')?.value) || 0;
+  const commercialRate = Number(document.getElementById('homeCommercialRate')?.value) || 0;
+  const commercialLiters = Number(document.getElementById('homeCommercialLiters')?.value) || 0;
+  const couponTotal = document.getElementById('homeCouponTotal');
+  const commercialTotal = document.getElementById('homeCommercialTotal');
+  if (couponTotal) couponTotal.textContent = (couponRate * couponLiters).toLocaleString();
+  if (commercialTotal) commercialTotal.textContent = (commercialRate * commercialLiters).toLocaleString();
+}
+
+function saveDashboardEntry(event, type) {
+  event.preventDefault();
+  const isCoupon = type === 'coupon';
+  const liters = Number(document.getElementById(isCoupon ? 'homeCouponLiters' : 'homeCommercialLiters')?.value) || 0;
+  const buyPrice = Number(document.getElementById(isCoupon ? 'homeCouponRate' : 'homeCommercialRate')?.value) || 0;
+  if (liters <= 0 || buyPrice < 0) {
+    showToast('تکایە بڕی لیتر و نرخ بە دروستی بنووسە');
+    return;
+  }
+
+  const couponCode = document.getElementById('homeCouponCode')?.value.trim() || '';
+  const couponId = isCoupon ? document.getElementById('homeCouponSelect')?.value : '';
+  const matchedByCode = isCoupon && couponCode
+    ? coupons.find(coupon => String(coupon.code || '').toLowerCase() === couponCode.toLowerCase() || String(coupon.password || '').toLowerCase() === couponCode.toLowerCase())
+    : null;
+  const matchedCoupon = matchedByCode || coupons.find(coupon => coupon.id === couponId);
+  if (isCoupon && couponCode && !matchedByCode) {
+    showToast('کۆدی کۆپۆنەکە نەدۆزرایەوە؛ کۆدێکی دروست هەڵبژێرە');
+    return;
+  }
+  const sellPrice = Number(document.getElementById('homeUnitSell')?.value) || 0;
+  const totalCost = liters * buyPrice;
+  const totalRevenue = liters * sellPrice;
+  const date = document.getElementById('homeTxnDate')?.value || formatLocalDate(new Date());
+  const registeredAt = new Date();
+  const time = registeredAt.toTimeString().slice(0, 5);
+  const commercialCode = document.getElementById('homeCommercialCode')?.value.trim() || 'TR-001';
+
+  fuelRecords.unshift({
+    id: 'fuel-' + Date.now(),
+    type,
+    couponId: matchedCoupon?.id || null,
+    vehicleName: matchedCoupon?.name || (isCoupon ? 'کۆپۆنی بێ ناونیشان' : `توجاری ${commercialCode}`),
+    code: matchedCoupon?.code || (isCoupon ? 'کۆپۆن' : commercialCode),
+    station: 'وێستگەی بەنزین',
+    date: `${date}T${time}`,
+    couponLiters: isCoupon ? liters : 0,
+    commLiters: isCoupon ? 0 : liters,
+    couponBuyPrice: isCoupon ? buyPrice : 0,
+    commBuyPrice: isCoupon ? 0 : buyPrice,
+    couponSellPrice: isCoupon ? sellPrice : 0,
+    commSellPrice: isCoupon ? 0 : sellPrice,
+    totalLiters: liters,
+    totalCost,
+    totalRevenue,
+    netProfit: totalRevenue - totalCost
+  });
+
+  if (matchedCoupon) {
+    matchedCoupon.activatedAt = registeredAt.toISOString();
+    saveCoupons();
+  }
+  saveFuels();
+  renderAll();
+  showToast(isCoupon ? 'مامەڵەی کۆپۆن تۆمارکرا' : 'مامەڵەی توجاری تۆمارکرا');
+}
+
+function saveUnitPrices(event) {
+  event.preventDefault();
+  const prices = {
+    buy: Number(document.getElementById('homeUnitBuy')?.value) || 0,
+    sell: Number(document.getElementById('homeUnitSell')?.value) || 0
+  };
+  localStorage.setItem(STORAGE_KEY_UNIT_PRICES, JSON.stringify(prices));
+  showToast('نرخی یەک لیتر پاشەکەوت کرا');
+}
+
+function renderHomeSummary() {
+  const totals = fuelRecords.reduce((sum, record) => {
+    sum.liters += Number(record.totalLiters) || (Number(record.couponLiters) || 0) + (Number(record.commLiters) || 0);
+    sum.cost += Number(record.totalCost) || 0;
+    sum.revenue += Number(record.totalRevenue) || 0;
+    sum.profit += Number(record.netProfit) || 0;
+    return sum;
+  }, { liters: 0, cost: 0, revenue: 0, profit: 0 });
+  const values = {
+    homeTotalRevenue: totals.revenue,
+    homeTotalLiters: totals.liters,
+    homeTotalCost: totals.cost,
+    homeTotalProfit: totals.profit
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value.toLocaleString();
+  });
+  renderCouponCycleCountdown();
+  renderHomeRecentRefuels();
+  renderDashboardTotals();
+}
+
+function getDashboardCoupon() {
+  const typedCode = document.getElementById('homeCouponCode')?.value.trim().toLowerCase() || '';
+  if (typedCode) {
+    return coupons.find(coupon =>
+      String(coupon.code || '').toLowerCase() === typedCode || String(coupon.password || '').toLowerCase() === typedCode
+    ) || null;
+  }
+  const selectedId = document.getElementById('homeCouponSelect')?.value;
+  const selectedCoupon = coupons.find(coupon => coupon.id === selectedId);
+  if (selectedCoupon) return selectedCoupon;
+  return [...coupons].sort((a, b) => new Date(b.activatedAt) - new Date(a.activatedAt))[0] || null;
+}
+
+function renderCouponCycleCountdown() {
+  const coupon = getDashboardCoupon();
+  const name = document.getElementById('cycleCouponName');
+  const note = document.getElementById('cycleNote');
+  const dot = document.getElementById('cycleStatusDot');
+  const daysEl = document.getElementById('cycleDays');
+  const hoursEl = document.getElementById('cycleHours');
+  const minutesEl = document.getElementById('cycleMinutes');
+  const secondsEl = document.getElementById('cycleSeconds');
+  if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
+
+  if (!coupon) {
+    if (name) name.textContent = 'هێشتا هیچ کۆپۆنێک تۆمار نەکراوە';
+    if (note) note.textContent = 'بۆ دەستپێکردنی خولی ٣ ڕۆژە، کۆپۆنێک زیاد بکە.';
+    if (dot) dot.classList.add('expired');
+    daysEl.textContent = '0';
+    hoursEl.textContent = '0';
+    minutesEl.textContent = '0';
+    secondsEl.textContent = '00';
+    return;
+  }
+
+  const cycleStart = new Date(coupon.activatedAt).getTime();
+  const now = Date.now();
+  const elapsed = now - cycleStart;
+  // Keep a repeating 72-hour dashboard cycle anchored to this coupon's last refill.
+  // Saving a refill updates activatedAt, so the new cycle starts from that transaction.
+  const remaining = elapsed < 0
+    ? cycleStart - now
+    : CYCLE_MS - (elapsed % CYCLE_MS);
+  const days = Math.floor(remaining / 86400000);
+  const hours = Math.floor((remaining % 86400000) / 3600000);
+  const minutes = Math.floor((remaining % 3600000) / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+  if (name) name.textContent = `${coupon.name} · ${coupon.code || 'کۆپۆن'}`;
+  daysEl.textContent = String(days);
+  hoursEl.textContent = String(hours);
+  minutesEl.textContent = String(minutes);
+  secondsEl.textContent = String(seconds).padStart(2, '0');
+  if (dot) dot.classList.remove('expired');
+  if (note) note.textContent = 'کاتژمێرەکە هەر ٣ ڕۆژ خۆکارانە دەچێتە خولی نوێ؛ تۆمارکردنی تێکردن کاتی خولەکە لە نوێوە دەست پێدەکات.';
+}
+
+function renderHomeRecentRefuels() {
+  const container = document.getElementById('homeRecentRefuels');
+  if (!container) return;
+  const recent = [...fuelRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+  if (recent.length === 0) {
+    container.innerHTML = '<div class="home-recent-empty">هێشتا هیچ تێکردنێک تۆمار نەکراوە</div>';
+    return;
+  }
+
+  container.innerHTML = recent.map(record => {
+    const date = new Date(record.date);
+    const validDate = !Number.isNaN(date.getTime());
+    const dateText = validDate
+      ? `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`
+      : escapeHtml(record.date || '—');
+    const timeText = validDate
+      ? date.toLocaleTimeString('ckb-IQ', { hour: 'numeric', minute: '2-digit' })
+      : '—';
+    return `
+      <article class="home-recent-card">
+        <div class="home-recent-top">
+          <strong>${escapeHtml(record.vehicleName || 'تێکردنی بەنزین')}</strong>
+          <span class="home-recent-code">${escapeHtml(record.code || 'کۆپۆن')}</span>
+        </div>
+        <div class="home-recent-meta">
+          <div><span>شوێن</span><strong>${escapeHtml(record.station || 'وێستگەی بەنزین')}</strong></div>
+          <div><span>بەروار و کات</span><strong dir="ltr">${dateText} · ${timeText}</strong></div>
+        </div>
+      </article>
+    `;
+  }).join('');
 }
 
 // ========================================================

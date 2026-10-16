@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-labelledby="title desc">
+  <title id="title">Fuel station illustration</title>
+  <desc id="desc">A modern blue and gold fuel station with pumps and canopy</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#123f75"/>
+      <stop offset="1" stop-color="#061a36"/>
+    </linearGradient>
+    <linearGradient id="canopy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffca54"/>
+      <stop offset="1" stop-color="#f08c17"/>
+    </linearGradient>
+    <linearGradient id="pump" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fbff"/>
+      <stop offset="1" stop-color="#b8d0e8"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="320" height="220" rx="28" fill="url(#sky)"/>
+  <circle cx="260" cy="43" r="35" fill="#148ee6" opacity=".13"/>
+  <circle cx="60" cy="70" r="25" fill="#00c99b" opacity=".10"/>
+  <path d="M25 176h270" stroke="#527699" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+  <path d="M42 95 160 48l118 47-9 19H51z" fill="url(#canopy)" stroke="#ffe19a" stroke-width="2"/>
+  <path d="m55 112 105-40 105 40" fill="none" stroke="#fff1c4" stroke-width="4" opacity=".85"/>
+  <path d="M70 114v59M250 114v59" stroke="#d5e5f4" stroke-width="11" stroke-linecap="round"/>
+  <path d="M89 114v59M231 114v59" stroke="#52779a" stroke-width="2" opacity=".7"/>
+  <path d="M48 174h224" stroke="#90aac4" stroke-width="5" stroke-linecap="round"/>
+  <g transform="translate(117 99)">
+    <rect x="0" y="0" width="48" height="71" rx="8" fill="url(#pump)" stroke="#ffffff" stroke-width="2"/>
+    <rect x="7" y="8" width="34" height="23" rx="4" fill="#09254a"/>
+    <path d="M24 12c-3 5-7 8-7 12a7 7 0 0 0 14 0c0-4-4-7-7-12z" fill="#25bcff"/>
+    <rect x="9" y="38" width="30" height="6" rx="3" fill="#7c98b6"/>
+    <rect x="9" y="49" width="20" height="5" rx="2.5" fill="#9ab0c8"/>
+    <path d="M48 11h7c8 0 8 8 8 14v16c0 7 4 11 9 11" fill="none" stroke="#e7f2ff" stroke-width="5" stroke-linecap="round"/>
+    <path d="M71 50v11" stroke="#e7f2ff" stroke-width="5" stroke-linecap="round"/>
+    <rect x="8" y="68" width="32" height="7" rx="3.5" fill="#758eaa"/>
+  </g>
+  <g transform="translate(190 124) scale(.72)">
+    <rect x="0" y="0" width="42" height="61" rx="7" fill="#d9e9f7" stroke="#ffffff" stroke-width="2"/>
+    <rect x="6" y="7" width="30" height="19" rx="4" fill="#0a2b53"/>
+    <path d="M42 10h5c7 0 7 7 7 12v15c0 6 3 9 7 9" fill="none" stroke="#e7f2ff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M61 45v10" stroke="#e7f2ff" stroke-width="4" stroke-linecap="round"/>
+    <rect x="7" y="33" width="27" height="5" rx="2.5" fill="#8ba4be"/>
+    <rect x="7" y="43" width="19" height="4" rx="2" fill="#9eb3c8"/>
+  </g>
+  <path d="m54 56 4-8 4 8" fill="none" stroke="#27d8b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <circle cx="273" cy="66" r="3" fill="#ffcf61"/>
+  <circle cx="44" cy="130" r="2.5" fill="#33c8ff"/>
+</svg>

@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>سیستەمی کۆبۆن و کڕینی بەنزین</title>
+  <meta name="theme-color" content="#041329">
+  <meta property="og:title" content="سیستەمی حیسابی بەنزینخانە">
+  <meta property="og:description" content="بەڕێوەبردنی کۆپۆن، تێکردنی بەنزین و حیسابی قازانج">
+  <meta property="og:image" content="fuel-station.svg">
+  <link rel="icon" type="image/svg+xml" href="fuel-station.svg">
   <!-- Google Fonts: Vazirmatn for clean Kurdish typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,7 +84,7 @@
     <header class="clean-top-header minimalist-header">
       <div class="header-brand-block">
         <div class="app-brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17"></path><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9l-3-3"></path><circle cx="9" cy="8" r="2"></circle></svg>
+          <img src="fuel-station.svg" alt="وێستگەی بەنزین" width="62" height="62">
         </div>
         <div class="app-brand-titles">
           <h1 class="app-title-text">سیستەمی کۆبۆن و کڕینی بەنزین</h1>
@@ -88,6 +93,11 @@
       </div>
 
       <div class="header-right-tools">
+        <label class="header-date-chip" aria-label="بەرواری مامەڵە">
+          <span>▦</span>
+          <input type="date" id="homeTxnDate" aria-label="بەرواری مامەڵە">
+          <span class="date-caret">⌄</span>
+        </label>
         <button class="btn-lock-quick" id="btnQuickLock" onclick="lockAppManually()" title="قوفڵکردن" style="display: none;">
           🔒
         </button>
@@ -97,32 +107,121 @@
       </div>
     </header>
 
-    <!-- ========================================================
-         PAGE 1: MAIN HOME (کۆبۆنەکان - SHOWCASING ALL COUPONS BEAUTIFULLY)
-         ======================================================== -->
+    <nav class="quick-tabs" aria-label="بەشە خێراکان">
+      <button class="quick-tab active" data-page="homePage" onclick="switchPage('homePage')"><span>▦</span>حیسابی تێکردن</button>
+      <button class="quick-tab" data-page="fuelPage" onclick="switchPage('fuelPage')"><span>⛽</span>حیسابی توجاری</button>
+      <button class="quick-tab" data-page="dashboardPage" onclick="switchPage('dashboardPage')"><span>▥</span>قازانج</button>
+      <button class="quick-tab" data-tab="reports" onclick="switchPage('dashboardPage', 'reports')"><span>▤</span>ڕاپۆرت</button>
+      <button class="quick-tab" data-page="settingsPage" onclick="switchPage('settingsPage')"><span>⚙</span>ڕێکخستن</button>
+    </nav>
+
+    <!-- Home: quick-entry accounting dashboard -->
     <main id="homePage" class="app-page active">
-      
-      <!-- Top Search & Filter Bar -->
+      <section class="entry-card coupon-entry-card">
+        <div class="entry-card-heading">
+          <span class="entry-icon">▣</span>
+          <div><h2>نرخی تێکردن بە کۆپۆن</h2><p>بەکارهێنانی کۆپۆن بۆ تێکردنی بەنزین</p></div>
+        </div>
+        <form class="quick-entry-form" onsubmit="saveDashboardEntry(event, 'coupon')">
+          <div class="entry-fields">
+            <label>کۆدی کۆپۆن
+              <input id="homeCouponCode" type="text" list="homeCouponCodes" placeholder="کۆد" autocomplete="off" oninput="syncDashboardCouponCode()">
+              <datalist id="homeCouponCodes"></datalist>
+              <select id="homeCouponSelect" aria-label="هەڵبژاردنی کۆپۆن" onchange="syncDashboardCouponSelect()"><option value="">هەڵبژاردنی کۆپۆن</option></select>
+            </label>
+            <label>نرخی کۆپۆن (د.ع)
+              <input id="homeCouponRate" type="number" min="0" step="1" value="100000" inputmode="numeric" required>
+            </label>
+            <label>چەند لیترت تی کردووە
+              <input id="homeCouponLiters" type="number" min="0" step="0.1" value="50" inputmode="decimal" required>
+            </label>
+            <div class="entry-total coupon-total"><span>کۆی پارەی تێکردن</span><strong id="homeCouponTotal">5,000,000</strong><small>د.ع</small></div>
+          </div>
+          <button class="entry-submit" type="submit">تۆمارکردن <span>▣</span></button>
+        </form>
+      </section>
+
+      <section class="entry-card commercial-entry-card">
+        <div class="entry-card-heading">
+          <span class="entry-icon">⛽</span>
+          <div><h2>نرخی توجاری</h2><p>تۆمارکردنی فرۆشتن بە توجاری</p></div>
+        </div>
+        <form class="quick-entry-form" onsubmit="saveDashboardEntry(event, 'commercial')">
+          <div class="entry-fields">
+            <label>ژمارەی توجاری
+              <input id="homeCommercialCode" type="text" value="TR-001" autocomplete="off">
+            </label>
+            <label>نرخی توجاری (د.ع)
+              <input id="homeCommercialRate" type="number" min="0" step="1" value="200000" inputmode="numeric" required>
+            </label>
+            <label>چەند لیترت تی کردووە
+              <input id="homeCommercialLiters" type="number" min="0" step="0.1" value="100" inputmode="decimal" required>
+            </label>
+            <div class="entry-total commercial-total"><span>کۆی پارەی توجاری</span><strong id="homeCommercialTotal">20,000,000</strong><small>د.ع</small></div>
+          </div>
+          <button class="entry-submit" type="submit">تۆمارکردن <span>▣</span></button>
+        </form>
+      </section>
+
+      <section class="entry-card unit-price-card">
+        <div class="entry-card-heading">
+          <span class="entry-icon">◆</span>
+          <div><h2>نرخی یەک لیتر</h2><p>نرخەکانی کڕین و فرۆشتنی یەک لیتر</p></div>
+        </div>
+        <form class="quick-entry-form" onsubmit="saveUnitPrices(event)">
+          <div class="unit-price-fields">
+            <label>نرخی کڕینی یەک لیتر
+              <div class="unit-input"><input id="homeUnitBuy" type="number" min="0" step="1" value="1000" inputmode="numeric"><span>د.ع</span></div>
+            </label>
+            <label>نرخی فرۆشتنی یەک لیتر
+              <div class="unit-input"><input id="homeUnitSell" type="number" min="0" step="1" value="1500" inputmode="numeric"><span>د.ع</span></div>
+            </label>
+          </div>
+          <button class="entry-submit" type="submit">تۆمارکردن <span>▣</span></button>
+        </form>
+      </section>
+
+      <section class="summary-card">
+        <div class="summary-heading"><span>▥</span><h2>کۆی گشتی و قازانجی ساڤیت</h2></div>
+        <div class="summary-grid">
+          <div class="summary-metric metric-green"><span class="metric-icon">▤</span><span class="metric-label">کۆی فرۆشتن</span><strong id="homeTotalRevenue">0</strong><small>د.ع</small></div>
+          <div class="summary-metric metric-blue"><span class="metric-icon">◉</span><span class="metric-label">کۆی لیتر فرۆشراو</span><strong id="homeTotalLiters">0</strong><small>ل</small></div>
+          <div class="summary-metric metric-purple"><span class="metric-icon">▰</span><span class="metric-label">کۆی خەرجی</span><strong id="homeTotalCost">0</strong><small>د.ع</small></div>
+          <div class="summary-metric metric-amber"><span class="metric-icon">▥</span><span class="metric-label">قازانجی ساڤیت</span><strong id="homeTotalProfit">0</strong><small>د.ع</small></div>
+        </div>
+      </section>
+
+      <section class="cycle-section" aria-labelledby="cycleTitle">
+        <div class="cycle-heading">
+          <div><h2 id="cycleTitle">کاتی ماوە بۆ نوێبوونەوەی کۆپۆن</h2><p id="cycleCouponName">کۆپۆنێک هەڵبژێرە یان مامەڵەیەک تۆمار بکە</p></div>
+          <span class="cycle-status-dot" id="cycleStatusDot"></span>
+        </div>
+        <div class="cycle-countdown" id="homeCycleCountdown" aria-live="polite">
+          <div class="cycle-unit"><span class="cycle-unit-label">ڕۆژ</span><strong id="cycleDays">٣</strong></div>
+          <div class="cycle-unit"><span class="cycle-unit-label">کاتژمێر</span><strong id="cycleHours">٠</strong></div>
+          <div class="cycle-unit"><span class="cycle-unit-label">خولەک</span><strong id="cycleMinutes">٠</strong></div>
+          <div class="cycle-unit"><span class="cycle-unit-label">چرکە</span><strong id="cycleSeconds">٠٠</strong></div>
+        </div>
+        <p class="cycle-note" id="cycleNote">کاتژمێرەکە هەر ٣ ڕۆژ خۆکارانە دەچێتە خولی نوێ؛ تۆمارکردنی تێکردن کاتی خولەکە لە نوێوە دەست پێدەکات.</p>
+      </section>
+
+      <section class="recent-section" aria-labelledby="recentTitle">
+        <div class="recent-heading"><h2 id="recentTitle">دوایین تێکردنەکان</h2><button type="button" onclick="switchPage('fuelPage')">هەمووی ببینە <span>‹</span></button></div>
+        <div id="homeRecentRefuels" class="home-recent-list"></div>
+      </section>
+    </main>
+
+    <!-- Coupon catalogue retained as a separate page -->
+    <main id="couponsPage" class="app-page">
       <div class="search-bar-wrap">
         <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         <input type="text" id="homeSearchInput" placeholder="گەڕان بەدوای کۆبۆن، ووشەی نهێنی یان مۆبایل..." oninput="handleHomeCouponSearch(this.value)">
       </div>
-
-      <!-- Quick Action / Add Banner -->
       <div class="home-action-banner">
-        <div class="banner-text-side">
-          <h3>کۆبۆنە تۆمارکراوەکان</h3>
-          <p>کلیک لە وێنەی هەر کۆبۆنێک بکە بۆ بینینی بە گەورەیی</p>
-        </div>
-        <button class="btn-add-coupon-pill" onclick="switchPage('addCouponPage')">
-          ➕ زیادکردنی کۆبۆن
-        </button>
+        <div class="banner-text-side"><h3>کۆپۆنە تۆمارکراوەکان</h3><p>بەڕێوەبردن و نوێکردنەوەی کۆپۆنەکان</p></div>
+        <button class="btn-add-coupon-pill" onclick="switchPage('addCouponPage')">＋ زیادکردنی کۆپۆن</button>
       </div>
-
-      <!-- Dynamic Beautiful Coupons Grid (Rendered via JS) -->
-      <div id="homeCouponsGrid" class="home-coupons-grid">
-        <!-- Rendered via JS -->
-      </div>
+      <div id="homeCouponsGrid" class="home-coupons-grid"></div>
     </main>
 
     <!-- ========================================================
@@ -468,43 +567,25 @@
          BOTTOM NAVIGATION BAR (RESTRUCTURED CLEAN BAR)
          ======================================================== -->
     <nav class="bottom-nav-bar">
-      <!-- 1. Home (کۆبۆنەکان) -->
       <button class="nav-btn active" data-page="homePage" onclick="switchPage('homePage')">
-        <div class="nav-pill-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        </div>
+        <div class="nav-pill-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div>
         <span class="nav-label">سەرەکی</span>
       </button>
-
-      <!-- 2. Fuel / Pump (کڕینی بەنزین) -->
+      <button class="nav-btn" data-page="couponsPage" onclick="switchPage('couponsPage')">
+        <div class="nav-pill-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17"></path><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9l-3-3"></path><circle cx="9" cy="8" r="2"></circle></svg></div>
+        <span class="nav-label">کۆپۆنەکان</span>
+      </button>
       <button class="nav-btn" data-page="fuelPage" onclick="switchPage('fuelPage')">
-        <div class="nav-pill-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17"></path><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9l-3-3"></path><circle cx="9" cy="8" r="2"></circle></svg>
-        </div>
-        <span class="nav-label">کڕینی بەنزین</span>
+        <div class="nav-pill-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M7 8h10M7 12h10M7 16h5"></path></svg></div>
+        <span class="nav-label">سندوق</span>
       </button>
-
-      <!-- 3. Center Dashboard / Barcode Floating Button -->
-      <button class="nav-center-qr-btn" onclick="switchPage('dashboardPage')" title="داشبۆرد">
-        <div class="qr-circle-inner">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        </div>
+      <button class="nav-btn" data-page="dashboardPage" onclick="switchPage('dashboardPage')">
+        <div class="nav-pill-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"></path></svg></div>
+        <span class="nav-label">ڕاپۆرت</span>
       </button>
-
-      <!-- 4. Add Coupon (زیادکردن) -->
-      <button class="nav-btn" data-page="addCouponPage" onclick="switchPage('addCouponPage')">
-        <div class="nav-pill-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-        </div>
-        <span class="nav-label">زیادکردن</span>
-      </button>
-
-      <!-- 5. Settings / Account (هەژمار و ڕەمز) -->
       <button class="nav-btn" data-page="settingsPage" onclick="switchPage('settingsPage')">
-        <div class="nav-pill-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>
-        </div>
-        <span class="nav-label">هەژمار</span>
+        <div class="nav-pill-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 2.9-.2-.1a1.7 1.7 0 0 0-1.8.2l-.2.1h-3.4l-.1-.2a1.7 1.7 0 0 0-1.7-1l-.2.1-3-1.7.1-.2a1.7 1.7 0 0 0-.2-1.8l-.1-.2v-3.4l.2-.1a1.7 1.7 0 0 0 1-1.7l-.1-.2 1.7-3 .2.1a1.7 1.7 0 0 0 1.8-.2l.2-.1h3.4l.1.2a1.7 1.7 0 0 0 1.7 1l.2-.1 3 1.7-.1.2a1.7 1.7 0 0 0 .2 1.8l.1.2v3.4z"></path></svg></div>
+        <span class="nav-label">ڕێکخستن</span>
       </button>
     </nav>
   </div>
