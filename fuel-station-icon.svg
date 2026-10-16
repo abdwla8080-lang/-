@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Fuel station app icon</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#123f75"/><stop offset="1" stop-color="#041329"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffcf62"/><stop offset="1" stop-color="#ed8915"/></linearGradient>
+    <linearGradient id="white" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#adc9e3"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="395" cy="112" r="68" fill="#168fe8" opacity=".12"/>
+  <circle cx="102" cy="168" r="52" fill="#00c99b" opacity=".1"/>
+  <path d="M74 366 256 286l182 80-13 30H87z" fill="url(#gold)" stroke="#ffe6a5" stroke-width="9" stroke-linejoin="round"/>
+  <path d="m95 378 161-70 161 70" fill="none" stroke="#fff3d0" stroke-width="12"/>
+  <path d="M124 392v70m264-70v70" stroke="#d8e8f6" stroke-width="30" stroke-linecap="round"/>
+  <path d="M256 322v140" stroke="#567a9b" stroke-width="5" opacity=".75"/>
+  <path d="M76 465h360" stroke="#9eb7d0" stroke-width="18" stroke-linecap="round"/>
+  <g transform="translate(190 177)">
+    <rect x="0" y="0" width="128" height="206" rx="23" fill="url(#white)" stroke="#fff" stroke-width="8"/>
+    <rect x="19" y="19" width="90" height="68" rx="12" fill="#09254a"/>
+    <path d="M64 30c-12 19-25 31-25 44a25 25 0 0 0 50 0c0-13-13-25-25-44z" fill="#25bcff"/>
+    <rect x="23" y="111" width="82" height="16" rx="8" fill="#7894b1"/>
+    <rect x="23" y="143" width="57" height="14" rx="7" fill="#9db4ca"/>
+    <path d="M128 29h19c25 0 25 24 25 43v43c0 21 12 32 29 32" fill="none" stroke="#e8f3ff" stroke-width="16" stroke-linecap="round"/>
+    <path d="M201 147v32" stroke="#e8f3ff" stroke-width="16" stroke-linecap="round"/>
+    <rect x="20" y="195" width="88" height="20" rx="10" fill="#758eaa"/>
+  </g>
+  <circle cx="428" cy="213" r="8" fill="#ffcf61"/>
+  <circle cx="77" cy="263" r="7" fill="#33c8ff"/>
+</svg>

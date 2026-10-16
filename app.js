@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 1000);
 });
 
-// Load saved data or initialize with sample data
+// Load saved data; new installations start empty and ready for the owner's entries.
 function loadData() {
   const savedCoupons = localStorage.getItem(STORAGE_KEY_COUPONS);
   const savedFuels = localStorage.getItem(STORAGE_KEY_FUELS);
@@ -61,55 +61,15 @@ function loadData() {
     }
   }
 
-  // Sample data if empty
-  if (!coupons || coupons.length === 0) {
-    const pastActivation = new Date(Date.now() - (72 - (2 * 24 + 16 + 12 / 60)) * 60 * 60 * 1000).toISOString();
-    coupons = [
-      {
-        id: 'cpn-1',
-        name: 'تۆیۆتا کۆرۆلا هایبرید سالۆن',
-        phone: '0750 123 4567',
-        password: 'KRD-88421',
-        code: '18490',
-        activatedAt: pastActivation,
-        image: 'https://images.unsplash.com/photo-1590362891988-f77804702088?auto=format&fit=crop&w=700&q=80',
-        notes: 'تایبەت بە بەنزینی موحەسەن لە وێستگەی مەخموور'
-      },
-      {
-        id: 'cpn-2',
-        name: 'هیۆندای ئەلەنترا ٢٠٢٣',
-        phone: '0770 987 6543',
-        password: 'HYN-54321',
-        code: '29814',
-        activatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // > 3 days (ready)
-        image: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=700&q=80',
-        notes: 'ئۆتۆمبێلی خێزانی، وێستگەی هەولێر'
-      }
-    ];
+  // Remove only the application's former demo rows; keep all real user data.
+  const cleanCoupons = coupons.filter(coupon => !['cpn-1', 'cpn-2'].includes(coupon.id));
+  const cleanFuelRecords = fuelRecords.filter(record => record.id !== 'fuel-1');
+  if (cleanCoupons.length !== coupons.length) {
+    coupons = cleanCoupons;
     saveCoupons();
   }
-
-  if (!fuelRecords || fuelRecords.length === 0) {
-    const todayStr = new Date().toISOString().split('T')[0];
-    fuelRecords = [
-      {
-        id: 'fuel-1',
-        couponId: 'cpn-1',
-        vehicleName: 'تۆیۆتا کۆرۆلا هایبرید سالۆن',
-        station: 'وێستگەی مەخموور',
-        date: todayStr + 'T10:30',
-        couponLiters: 100,
-        commLiters: 50,
-        couponBuyPrice: 450,
-        commBuyPrice: 800,
-        couponSellPrice: 750,
-        commSellPrice: 950,
-        totalLiters: 150,
-        totalCost: (100 * 450) + (50 * 800), // 45000 + 40000 = 85000
-        totalRevenue: (100 * 750) + (50 * 950), // 75000 + 47500 = 122500
-        netProfit: 122500 - 85000 // +37500
-      }
-    ];
+  if (cleanFuelRecords.length !== fuelRecords.length) {
+    fuelRecords = cleanFuelRecords;
     saveFuels();
   }
 }
@@ -1131,6 +1091,7 @@ function getDashboardCoupon() {
 
 function renderCouponCycleCountdown() {
   const coupon = getDashboardCoupon();
+  const section = document.getElementById('cycleSection');
   const name = document.getElementById('cycleCouponName');
   const note = document.getElementById('cycleNote');
   const dot = document.getElementById('cycleStatusDot');
@@ -1141,9 +1102,7 @@ function renderCouponCycleCountdown() {
   if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
 
   if (!coupon) {
-    if (name) name.textContent = 'هێشتا هیچ کۆپۆنێک تۆمار نەکراوە';
-    if (note) note.textContent = 'بۆ دەستپێکردنی خولی ٣ ڕۆژە، کۆپۆنێک زیاد بکە.';
-    if (dot) dot.classList.add('expired');
+    if (section) section.hidden = true;
     daysEl.textContent = '0';
     hoursEl.textContent = '0';
     minutesEl.textContent = '0';
@@ -1154,11 +1113,13 @@ function renderCouponCycleCountdown() {
   const cycleStart = new Date(coupon.activatedAt).getTime();
   const now = Date.now();
   const elapsed = now - cycleStart;
-  // Keep a repeating 72-hour dashboard cycle anchored to this coupon's last refill.
-  // Saving a refill updates activatedAt, so the new cycle starts from that transaction.
-  const remaining = elapsed < 0
-    ? cycleStart - now
-    : CYCLE_MS - (elapsed % CYCLE_MS);
+  const remaining = CYCLE_MS - elapsed;
+  if (remaining <= 0) {
+    if (section) section.hidden = true;
+    lastDashboardCodeEntry = '';
+    return;
+  }
+  if (section) section.hidden = false;
   const days = Math.floor(remaining / 86400000);
   const hours = Math.floor((remaining % 86400000) / 3600000);
   const minutes = Math.floor((remaining % 3600000) / 60000);
@@ -1169,7 +1130,7 @@ function renderCouponCycleCountdown() {
   minutesEl.textContent = String(minutes);
   secondsEl.textContent = String(seconds).padStart(2, '0');
   if (dot) dot.classList.remove('expired');
-  if (note) note.textContent = 'کاتژمێرەکە هەر ٣ ڕۆژ خۆکارانە دەچێتە خولی نوێ؛ تۆمارکردنی تێکردن کاتی خولەکە لە نوێوە دەست پێدەکات.';
+  if (note) note.textContent = 'کاتەکە لە کاتی تۆمارکردنی کۆپۆنەوە دەژمێردرێت؛ دوای ٣ ڕۆژ لە داشبۆرد لادەبرێت.';
 }
 
 function renderHomeRecentRefuels() {

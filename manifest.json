@@ -1,0 +1,28 @@
+{
+  "id": "./",
+  "name": "سیستەمی حیسابی بەنزینخانە",
+  "short_name": "حیسابی بەنزین",
+  "description": "بەڕێوەبردنی کۆپۆن و حیسابی بەنزینخانە",
+  "lang": "ckb",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#041329",
+  "theme_color": "#041329",
+  "icons": [
+    {
+      "src": "fuel-station-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "fuel-station-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

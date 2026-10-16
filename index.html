@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>سیستەمی کۆبۆن و کڕینی بەنزین</title>
   <meta name="theme-color" content="#041329">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="حیسابی بەنزین">
   <meta property="og:title" content="سیستەمی حیسابی بەنزینخانە">
   <meta property="og:description" content="بەڕێوەبردنی کۆپۆن، تێکردنی بەنزین و حیسابی قازانج">
-  <meta property="og:image" content="fuel-station.svg">
-  <link rel="icon" type="image/svg+xml" href="fuel-station.svg">
+  <meta property="og:image" content="fuel-station-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="fuel-station-icon.svg">
+  <link rel="apple-touch-icon" href="fuel-station-icon.svg">
+  <link rel="manifest" href="manifest.json">
   <!-- Google Fonts: Vazirmatn for clean Kurdish typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,7 +89,7 @@
     <header class="clean-top-header minimalist-header">
       <div class="header-brand-block">
         <div class="app-brand-icon">
-          <img src="fuel-station.svg" alt="وێستگەی بەنزین" width="62" height="62">
+          <img src="fuel-station-icon.svg" alt="وێستگەی بەنزین" width="62" height="62">
         </div>
         <div class="app-brand-titles">
           <h1 class="app-title-text">سیستەمی کۆبۆن و کڕینی بەنزین</h1>
@@ -130,10 +135,10 @@
               <select id="homeCouponSelect" aria-label="هەڵبژاردنی کۆپۆن" onchange="syncDashboardCouponSelect()"><option value="">هەڵبژاردنی کۆپۆن</option></select>
             </label>
             <label>نرخی کۆپۆن (د.ع)
-              <input id="homeCouponRate" type="number" min="0" step="1" value="100000" inputmode="numeric" required>
+              <input id="homeCouponRate" type="number" min="0" step="1" placeholder="0" inputmode="numeric" required>
             </label>
             <label>چەند لیترت تی کردووە
-              <input id="homeCouponLiters" type="number" min="0" step="0.1" value="50" inputmode="decimal" required>
+              <input id="homeCouponLiters" type="number" min="0" step="0.1" placeholder="0" inputmode="decimal" required>
             </label>
             <div class="entry-total coupon-total"><span>کۆی پارەی تێکردن</span><strong id="homeCouponTotal">5,000,000</strong><small>د.ع</small></div>
           </div>
@@ -149,13 +154,13 @@
         <form class="quick-entry-form" onsubmit="saveDashboardEntry(event, 'commercial')">
           <div class="entry-fields">
             <label>ژمارەی توجاری
-              <input id="homeCommercialCode" type="text" value="TR-001" autocomplete="off">
+              <input id="homeCommercialCode" type="text" placeholder="TR-001" autocomplete="off">
             </label>
             <label>نرخی توجاری (د.ع)
-              <input id="homeCommercialRate" type="number" min="0" step="1" value="200000" inputmode="numeric" required>
+              <input id="homeCommercialRate" type="number" min="0" step="1" placeholder="0" inputmode="numeric" required>
             </label>
             <label>چەند لیترت تی کردووە
-              <input id="homeCommercialLiters" type="number" min="0" step="0.1" value="100" inputmode="decimal" required>
+              <input id="homeCommercialLiters" type="number" min="0" step="0.1" placeholder="0" inputmode="decimal" required>
             </label>
             <div class="entry-total commercial-total"><span>کۆی پارەی توجاری</span><strong id="homeCommercialTotal">20,000,000</strong><small>د.ع</small></div>
           </div>
@@ -171,10 +176,10 @@
         <form class="quick-entry-form" onsubmit="saveUnitPrices(event)">
           <div class="unit-price-fields">
             <label>نرخی کڕینی یەک لیتر
-              <div class="unit-input"><input id="homeUnitBuy" type="number" min="0" step="1" value="1000" inputmode="numeric"><span>د.ع</span></div>
+              <div class="unit-input"><input id="homeUnitBuy" type="number" min="0" step="1" placeholder="0" inputmode="numeric"><span>د.ع</span></div>
             </label>
             <label>نرخی فرۆشتنی یەک لیتر
-              <div class="unit-input"><input id="homeUnitSell" type="number" min="0" step="1" value="1500" inputmode="numeric"><span>د.ع</span></div>
+              <div class="unit-input"><input id="homeUnitSell" type="number" min="0" step="1" placeholder="0" inputmode="numeric"><span>د.ع</span></div>
             </label>
           </div>
           <button class="entry-submit" type="submit">تۆمارکردن <span>▣</span></button>
@@ -191,7 +196,7 @@
         </div>
       </section>
 
-      <section class="cycle-section" aria-labelledby="cycleTitle">
+      <section class="cycle-section" id="cycleSection" aria-labelledby="cycleTitle" hidden>
         <div class="cycle-heading">
           <div><h2 id="cycleTitle">کاتی ماوە بۆ نوێبوونەوەی کۆپۆن</h2><p id="cycleCouponName">کۆپۆنێک هەڵبژێرە یان مامەڵەیەک تۆمار بکە</p></div>
           <span class="cycle-status-dot" id="cycleStatusDot"></span>
@@ -202,7 +207,7 @@
           <div class="cycle-unit"><span class="cycle-unit-label">خولەک</span><strong id="cycleMinutes">٠</strong></div>
           <div class="cycle-unit"><span class="cycle-unit-label">چرکە</span><strong id="cycleSeconds">٠٠</strong></div>
         </div>
-        <p class="cycle-note" id="cycleNote">کاتژمێرەکە هەر ٣ ڕۆژ خۆکارانە دەچێتە خولی نوێ؛ تۆمارکردنی تێکردن کاتی خولەکە لە نوێوە دەست پێدەکات.</p>
+        <p class="cycle-note" id="cycleNote">کاتەکە لە کاتی تۆمارکردنی کۆپۆنەوە دەژمێردرێت؛ دوای ٣ ڕۆژ لە داشبۆرد لادەبرێت.</p>
       </section>
 
       <section class="recent-section" aria-labelledby="recentTitle">
@@ -262,7 +267,7 @@
             </div>
             <div class="form-group">
               <label for="fInpStation">🏢 ناوی وێستگە</label>
-              <input type="text" id="fInpStation" placeholder="نموونە: مەخموور، هەولێر..." value="وێستگەی مەخموور" required>
+              <input type="text" id="fInpStation" placeholder="نموونە: مەخموور، هەولێر..." required>
             </div>
           </div>
 
@@ -272,13 +277,13 @@
               <label for="fInpCouponLiters">
                 🎫 لیتری بەنزین بە کۆبۆن
               </label>
-              <input type="number" step="0.1" id="fInpCouponLiters" placeholder="0" value="100" required>
+              <input type="number" step="0.1" id="fInpCouponLiters" placeholder="0" required>
             </div>
             <div class="form-group">
               <label for="fInpCommLiters">
                 🚛 لیتری بەنزین بە توجاری
               </label>
-              <input type="number" step="0.1" id="fInpCommLiters" placeholder="0" value="50" required>
+              <input type="number" step="0.1" id="fInpCommLiters" placeholder="0" required>
             </div>
           </div>
 
@@ -288,13 +293,13 @@
               <label for="fInpCouponBuyPrice">
                 💰 نرخی کڕینی ١ لیتر بە کۆبۆن (د.ع)
               </label>
-              <input type="number" step="1" id="fInpCouponBuyPrice" placeholder="نموونە: 450" value="450" required>
+              <input type="number" step="1" id="fInpCouponBuyPrice" placeholder="0" required>
             </div>
             <div class="form-group">
               <label for="fInpCommBuyPrice">
                 💰 نرخی کڕینی ١ لیتر بە توجاری (د.ع)
               </label>
-              <input type="number" step="1" id="fInpCommBuyPrice" placeholder="نموونە: 800" value="800" required>
+              <input type="number" step="1" id="fInpCommBuyPrice" placeholder="0" required>
             </div>
           </div>
 
@@ -304,13 +309,13 @@
               <label for="fInpCouponSellPrice">
                 🏷️ نرخی فرۆشتنی ١ لیتر بەنزینی کۆبۆن
               </label>
-              <input type="number" step="1" id="fInpCouponSellPrice" placeholder="نموونە: 750" value="750" required>
+              <input type="number" step="1" id="fInpCouponSellPrice" placeholder="0" required>
             </div>
             <div class="form-group">
               <label for="fInpCommSellPrice">
                 🏷️ نرخی فرۆشتنی ١ لیتر بەنزینی توجاری
               </label>
-              <input type="number" step="1" id="fInpCommSellPrice" placeholder="نموونە: 950" value="950" required>
+              <input type="number" step="1" id="fInpCommSellPrice" placeholder="0" required>
             </div>
           </div>
 
@@ -637,5 +642,10 @@
   <div id="toast" class="clean-toast"></div>
 
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+    }
+  </script>
 </body>
 </html>
